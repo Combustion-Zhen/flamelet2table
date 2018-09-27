@@ -13,4 +13,8 @@
 *.swp
 *.csv
 .DS_store
+
+# ignore folders
 .ipynb_checkpoints/
+__pycache__/
+flamelets/
