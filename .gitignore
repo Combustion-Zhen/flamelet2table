@@ -1,0 +1,15 @@
+# ignore all
+*
+*/
+
+# unignore all with extensions
+!*.*
+
+# unignore makefile
+!Makefile
+
+# ignore files
+*.eps
+*.swp
+*.csv
+.DS_store
