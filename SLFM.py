@@ -5,7 +5,7 @@ import numpy as np
 import h5py
 from beta_integration import beta_integration
 
-def SLFM( dir_name = 'flamelets', n_Z_variance=21 ):
+def SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
 
     # get the flamelet solutions
     file_suffix = 'csv'
