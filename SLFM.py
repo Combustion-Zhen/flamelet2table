@@ -108,8 +108,8 @@ if __name__ == '__main__':
         nargs = '?',
         const = 2,
         default = 21,
-        type=int, 
-        help='the number of points on the axis of variance')
+        type = int,
+        help = 'the number of points on the axis of variance')
     args = parser.parse_args()
 
     SLFM(dir_name = args.folder,
