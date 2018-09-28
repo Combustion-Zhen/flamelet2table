@@ -12,6 +12,8 @@
 *.eps
 *.swp
 *.csv
+*.npy
+*.h5
 .DS_store
 
 # ignore folders
