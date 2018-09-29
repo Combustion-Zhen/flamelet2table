@@ -4,23 +4,28 @@ import argparse
 import numpy as np
 import h5py
 from beta_integration import beta_integration
+from name_params import *
 
 def SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
 
     # get the flamelet solutions
     file_suffix = 'csv'
 
-    chi = []
+    chi = np.zeros(1)
     os.chdir(dir_name)
     for filename in glob.glob('.'.join(['*', file_suffix])):
-        chi.append(float(filename[:-4]))
+        params = name2params( filename[:-1-len(file_suffix)] )
+        chi = np.append(chi, params['chi'])
     os.chdir('..')
-    chi.sort()
-    chi = np.array(chi)
+    chi = np.delete( chi, 0, 0 )
+    chi = np.sort( chi )
     n_chi = chi.size
 
     # take the flamelet solution with largest chi_st
-    filename = '{0}/{1:g}.{2}'.format(dir_name, chi[-1], file_suffix)
+    params = { 'chi' : chi[-1] }
+    file_prefix = params2name( params )
+
+    filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
     flamelet = np.genfromtxt(filename, names=True, delimiter=',')
 
     # the number of variables to be integrated
@@ -39,7 +44,10 @@ def SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
     flamelet_table = np.empty((n_chi, n_Z_variance, n_Z_average, n_variable))
 
     for l, chi_st in enumerate(chi):
-        filename = '{0}/{1:g}.{2}'.format(dir_name, chi_st, file_suffix)
+        params = { 'chi' : chi_st }
+        file_prefix = params2name( params )
+
+        filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
         flamelet = np.genfromtxt(filename, names=True, delimiter=',')    
         for i, nvar in enumerate(Z_variance):
             for j, ave in enumerate(Z_average):
