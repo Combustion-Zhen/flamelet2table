@@ -4,9 +4,17 @@ import argparse
 import numpy as np
 import h5py
 from beta_integration import beta_integration
+from flamelet_integration import *
 from name_params import *
 
-def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
+def table_SLFM(dir_name = 'flamelets',
+               average_distribution = 'solution',
+               average_num = 100,
+               variance_distribution = 'geometric',
+               variance_num = 15,
+               variance_ratio = 1.1):
+
+    independent_variable = 'Z'
 
     # get the flamelet solutions
     file_suffix = 'csv'
@@ -19,7 +27,6 @@ def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
     os.chdir('..')
     chi = np.delete( chi, 0, 0 )
     chi = np.sort( chi )
-    n_chi = chi.size
 
     # take the flamelet solution with largest chi_st
     params = { 'chi' : chi[-1] }
@@ -28,20 +35,28 @@ def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
     filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
     flamelet = np.genfromtxt(filename, names=True, delimiter=',')
 
-    # the number of variables to be integrated
+    # the variables to be integrated
     names = list(flamelet.dtype.names)
-    names.remove('Z')
+    names.remove(independent_variable)
     variable_names = np.array( names )
-    n_variable = variable_names.size
 
-    # the Z_average axis
-    Z_average = flamelet['Z']
-    n_Z_average = Z_average.size
+    # the average axis
+    if average_distribution == 'solution' :
+        independent_average = flamelet[independent_variable]
+    else :
+        independent_average = np.linspace(0., 1., num = average_num)
 
-    # the Z_variance axis
-    Z_variance = np.linspace(0., 1., num=n_Z_variance)
+    # the variance axis
+    if variance_distribution == 'geometric' :
+        independent_variance = geometric_progression_01(variance_num,
+                                                        variance_ratio)
+    else :
+        independent_variance = np.linspace(0., 1., num=variance_num)
 
-    flamelet_table = np.empty((n_chi, n_Z_variance, n_Z_average, n_variable))
+    flamelet_table = np.empty((chi.size, 
+                               independent_variance.size, 
+                               independent_average.size, 
+                               variable_names.size))
 
     for l, chi_st in enumerate(chi):
         params = { 'chi' : chi_st }
@@ -49,12 +64,13 @@ def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
 
         filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
         flamelet = np.genfromtxt(filename, names=True, delimiter=',')    
-        for i, nvar in enumerate(Z_variance):
-            for j, ave in enumerate(Z_average):
-                for k, name in enumerate(variable_names):
-                    flamelet_table[l,i,j,k] = beta_integration(
-                            flamelet[name], flamelet['Z'],
-                            ave, nvar)
+
+        flamelet_table[l,:,:,:] = single_flamelet_integration(
+            flamelet,
+            independent_variable, 
+            independent_average, 
+            independent_variance, 
+            variable_names)
 
     # save the flamelet table
     with h5py.File('flameletTable.h5', 'w') as f:
@@ -68,8 +84,8 @@ def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
                               dtype=dt)
         ds[...] = variable_names
         
-        f['mixtureFractionAverage'] = Z_average
-        f['mixtureFractionNormalizedVariance'] = Z_variance
+        f['mixtureFractionAverage'] = independent_average
+        f['mixtureFractionNormalizedVariance'] = independent_variance
         f['stoichiometricScalarDissipationRate'] = chi
         
         f['flameletTable'].dims.create_scale(
@@ -103,7 +119,9 @@ def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
     return
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
         '-f', '--folder',
         nargs = '?',
@@ -111,14 +129,15 @@ if __name__ == '__main__':
         default = 'flamelets',
         type = str,
         help = 'folder of the flamelet solutions')
+
     parser.add_argument(
         '-n', '--number',
         nargs = '?',
         const = 2,
-        default = 21,
+        default = 15,
         type = int,
         help = 'the number of points on the axis of variance')
     args = parser.parse_args()
 
     table_SLFM(dir_name = args.folder,
-               n_Z_variance = args.number)
+               variance_num = args.number)
