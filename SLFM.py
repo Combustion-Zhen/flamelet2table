@@ -6,7 +6,7 @@ import h5py
 from beta_integration import beta_integration
 from name_params import *
 
-def SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
+def table_SLFM( dir_name = 'flamelets', n_Z_variance = 21 ):
 
     # get the flamelet solutions
     file_suffix = 'csv'
@@ -120,5 +120,5 @@ if __name__ == '__main__':
         help = 'the number of points on the axis of variance')
     args = parser.parse_args()
 
-    SLFM(dir_name = args.folder,
-         n_Z_variance = args.number)
+    table_SLFM(dir_name = args.folder,
+               n_Z_variance = args.number)

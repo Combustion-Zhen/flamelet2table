@@ -56,7 +56,7 @@ def FM2csv(mode = 'SLFM',
 
         if mode == 'FPV' :
             params['T'] = float(
-                flamelet[flamelet.find('Tst'):])
+                flamelet[flamelet.find('Tst')+3:])
 
         file_prefix = params2name( params )
 
