@@ -9,12 +9,14 @@
 !Makefile
 
 # ignore files
+*.ipynb
 *.eps
 *.swp
 *.csv
 *.npy
 *.h5
 .DS_store
+
 
 # ignore folders
 .ipynb_checkpoints/

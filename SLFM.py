@@ -36,22 +36,15 @@ def table_SLFM(dir_name = 'flamelets',
     flamelet = np.genfromtxt(filename, names=True, delimiter=',')
 
     # the variables to be integrated
-    names = list(flamelet.dtype.names)
-    names.remove(independent_variable)
-    variable_names = np.array( names )
+    variable_names = flamelet_dependent_variable(flamelet, independent_variable)
 
     # the average axis
-    if average_distribution == 'solution' :
-        independent_average = flamelet[independent_variable]
-    else :
-        independent_average = np.linspace(0., 1., num = average_num)
+    independent_average = independent_variable_average(
+        flamelet,independent_variable,average_distribution,average_num)
 
     # the variance axis
-    if variance_distribution == 'geometric' :
-        independent_variance = geometric_progression_01(variance_num,
-                                                        variance_ratio)
-    else :
-        independent_variance = np.linspace(0., 1., num=variance_num)
+    independent_variance = variance_series(
+        variance_distribution, variance_num, variance_ratio)
 
     flamelet_table = np.empty((chi.size, 
                                independent_variance.size, 
@@ -124,20 +117,45 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-f', '--folder',
-        nargs = '?',
-        const = 'flamelets',
         default = 'flamelets',
         type = str,
         help = 'folder of the flamelet solutions')
 
     parser.add_argument(
-        '-n', '--number',
-        nargs = '?',
-        const = 2,
+        '-a', '--average-distribution',
+        default = 'solution',
+        type = str,
+        help = 'mesh of average')
+
+    parser.add_argument(
+        '--number-average',
+        default = 100,
+        type = int,
+        help = 'the number of points on the axis of average')
+
+    parser.add_argument(
+        '-v', '--variance-distribution',
+        default = 'geometric',
+        type = str,
+        help = 'mesh of variance')
+
+    parser.add_argument(
+        '--number-variance',
         default = 15,
         type = int,
         help = 'the number of points on the axis of variance')
+
+    parser.add_argument(
+        '--ratio-variance',
+        default = 1.1,
+        type = float,
+        help = 'growth rate of the variance mesh')
+
     args = parser.parse_args()
 
     table_SLFM(dir_name = args.folder,
-               variance_num = args.number)
+               average_distribution = args.average_distribution,
+               average_num = args.number_average,
+               variance_distribution = args.variance_distribution,
+               variance_num = args.number_variance,
+               variance_ratio = args.ratio_variance)
