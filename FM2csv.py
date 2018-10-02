@@ -117,22 +117,22 @@ if __name__ == '__main__' :
         '-m', '--mode',
         default = 'SLFM',
         type = str,
-        help = 'use of the flamelet solutions')
+        help = 'use of the flamelet solutions: [SLFM]/FPV')
     parser.add_argument(
         '-p', '--prefix',
         default = 'CH4_p01_0',
         type = str,
-        help = 'file prefix of the flamelet solution')
+        help = 'file prefix of the flamelet solution [CH4_p01_0]')
     parser.add_argument(
         '--FlameMasterFolder',
         default = 'OutSteady',
         type = str,
-        help = 'folder of the FlameMaster solutions')
+        help = 'folder of the FlameMaster solutions [OutSteady]')
     parser.add_argument(
         '--csvFolder',
         default = 'flamelets',
         type = str,
-        help = 'the number of points on the axis of variance')
+        help = 'folder for output csv files [flamelets]')
     args = parser.parse_args()
 
     FM2csv(mode = args.mode,

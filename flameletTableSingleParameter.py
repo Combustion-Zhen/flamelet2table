@@ -1,69 +1,70 @@
-import os
 import glob
 import argparse
 import numpy as np
 import h5py
-from beta_integration import beta_integration
 from flamelet_integration import *
-from name_params import *
+from name_params import name2params
 
-def table_SLFM(dir_name = 'flamelets',
-               average_mesh = 'solution',
-               average_num = 100,
-               variance_mesh = 'geometric',
-               variance_num = 15,
-               variance_ratio = 1.1):
+def single_param_table(
+    mode = 'SLFM', dir_name = 'flamelets',
+    param_mesh = 'solution', param_pdf = 'delta',
+    average_mesh = 'solution', average_num = 100,
+    variance_mesh = 'geometric', variance_num = 15, variance_ratio = 1.1):
 
-    independent_variable = 'Z'
+    if mode == 'SLFM' :
+        independent_variable = 'Z'
+        param_name = 'chi'
+        ref_param = 'chi'
+    elif mode == 'FPV' :
+        independent_variable = 'Z'
+        param_name = 'T'
+        ref_param = 'chi'
+    else :
+        print('mode not implemented')
+        return
 
     # get the flamelet solutions
     file_suffix = 'csv'
 
-    chi = np.zeros(1)
-    os.chdir(dir_name)
-    for filename in glob.glob('.'.join(['*', file_suffix])):
-        params = name2params( filename[:-1-len(file_suffix)] )
-        chi = np.append(chi, params['chi'])
-    os.chdir('..')
-    chi = np.delete( chi, 0, 0 )
-    chi = np.sort( chi )
+    p_str = 1 + len( dir_name )
+    p_end = -1 - len( file_suffix )
 
-    # take the flamelet solution with largest chi_st
-    params = { 'chi' : chi[-1] }
-    file_prefix = params2name( params )
+    # get file and parameter list
+    param = []
+    filenames = []
 
-    filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
-    flamelet = np.genfromtxt(filename, names=True, delimiter=',')
+    for filename in glob.glob('{}/*.{}'.format(dir_name,file_suffix)):
+        params = name2params(filename[p_str:p_end])
+        param.append( params[param_name] )
+        filenames.append( filename )
+
+    param = np.array(param)
+    idx = np.argsort(param)[::-1]
+
+    param = param[idx]
+    param = (param-param[-1])/(param[0]-param[-1])
+
+    filenames = np.array( filenames )[idx]
+
+    # get the referecen flamelet
+    flamelet = reference_solution(filenames, ref_param, p_str, p_end)
 
     # the variables to be integrated
     variable_names = dependent_variable_names(flamelet, independent_variable)
 
-    # the average axis
+    # the independent variable average axis
     independent_average = independent_variable_average(
         flamelet,independent_variable,average_mesh,average_num)
 
     # the variance axis
-    independent_variance = sequence_01(
+    normalized_variance = sequence_01(
         variance_mesh, variance_num, variance_ratio)
 
-    flamelet_table = np.empty((chi.size, 
-                               independent_variance.size, 
-                               independent_average.size, 
-                               variable_names.size))
-
-    for l, chi_st in enumerate(chi):
-        params = { 'chi' : chi_st }
-        file_prefix = params2name( params )
-
-        filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
-        flamelet = np.genfromtxt(filename, names=True, delimiter=',')    
-
-        flamelet_table[l,:,:,:] = single_solution_integration(
-            flamelet,
-            independent_variable, 
-            independent_average, 
-            independent_variance, 
-            variable_names)
+    # flamelet table with delta distribution of the parameter
+    flamelet_table = single_param_integration(
+        filenames, 
+        independent_variable, independent_average, normalized_variance, 
+        variable_names)
 
     # save the flamelet table
     with h5py.File('flameletTable.h5', 'w') as f:
@@ -78,8 +79,8 @@ def table_SLFM(dir_name = 'flamelets',
         ds[...] = variable_names
         
         f['mixtureFractionAverage'] = independent_average
-        f['mixtureFractionNormalizedVariance'] = independent_variance
-        f['stoichiometricScalarDissipationRate'] = chi
+        f['mixtureFractionNormalizedVariance'] = normalized_variance
+        f['stoichiometricLambda'] = param
         
         f['flameletTable'].dims.create_scale(
                 f['variable'],
@@ -94,11 +95,11 @@ def table_SLFM(dir_name = 'flamelets',
                 'mixtureFractionNormalizedVariance')
         
         f['flameletTable'].dims.create_scale(
-                f['stoichiometricScalarDissipationRate'],
-                'stoichiometricScalarDissipationRate')
+                f['stoichiometricLambda'],
+                'stoichiometricLambda')
         
         f['flameletTable'].dims[0].attach_scale(
-                f['stoichiometricScalarDissipationRate'])
+                f['stoichiometricLambda'])
 
         f['flameletTable'].dims[1].attach_scale(
                 f['mixtureFractionNormalizedVariance'])
@@ -116,10 +117,28 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        '-m', '--mode',
+        default = 'SLFM',
+        type = str,
+        help = 'use of the flamelet solutions: [SLFM]/FPV')
+
+    parser.add_argument(
         '-f', '--folder',
         default = 'flamelets',
         type = str,
         help = 'folder of the flamelet solutions [flamelets]')
+
+    parser.add_argument(
+        '-p', '--parameter-mesh',
+        default = 'solution',
+        type = str,
+        help = 'mesh of the flamelet parameter [solution]/uniform')
+
+    parser.add_argument(
+        '--parameter-pdf',
+        default = 'delta',
+        type = str,
+        help = 'pdf of the flamelet parameter [delta]')
 
     parser.add_argument(
         '-a', '--average-mesh',
@@ -153,9 +172,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    table_SLFM(dir_name = args.folder,
-               average_mesh = args.average_mesh,
-               average_num = args.number_average,
-               variance_mesh = args.variance_mesh,
-               variance_num = args.number_variance,
-               variance_ratio = args.ratio_variance)
+    args = parser.parse_args()
+
+    single_param_table(
+        mode = args.mode, dir_name = args.folder,
+        param_mesh = args.parameter_mesh, param_pdf = args.parameter_pdf,
+        average_mesh = args.average_mesh, average_num = args.number_average,
+        variance_mesh = args.variance_mesh, variance_num = args.number_variance,
+        variance_ratio = args.ratio_variance)
