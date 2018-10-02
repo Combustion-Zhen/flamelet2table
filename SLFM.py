@@ -43,7 +43,7 @@ def table_SLFM(dir_name = 'flamelets',
         flamelet,independent_variable,average_distribution,average_num)
 
     # the variance axis
-    independent_variance = variance_series(
+    independent_variance = sequence(
         variance_distribution, variance_num, variance_ratio)
 
     flamelet_table = np.empty((chi.size, 

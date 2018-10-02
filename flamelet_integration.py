@@ -40,21 +40,16 @@ def flamelet_dependent_variable(flamelet, independent_variable):
 
     return np.array( names )
 
-def independent_variable_average(flamelet,
-                                 independent_variable,
-                                 average_distribution,
-                                 average_num):
+def independent_variable_average(flamelet, var, distribution, npts):
 
-    if average_distribution == 'solution' :
-        return flamelet[independent_variable]
+    if distribution == 'solution' :
+        return flamelet[var]
     else :
-        return np.linspace(0., 1., num = average_num)
+        return np.linspace(0., 1., num = npts)
 
-def variance_series(variance_distribution,
-                    variance_num,
-                    variance_ratio):
+def sequence_01(distribution, npts, ratio):
 
-    if variance_distribution == 'geometric' :
-        return geometric_progression_01(variance_num,variance_ratio)
+    if distribution == 'geometric' :
+        return geometric_progression_01(npts, ratio)
     else :
-        return np.linspace(0.,1.,num=variance_num)
+        return np.linspace(0., 1., num=npts)

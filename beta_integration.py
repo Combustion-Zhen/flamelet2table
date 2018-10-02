@@ -40,7 +40,7 @@ def beta_integration_analytic(f, x, a, b):
 
 def delta_integration(f, x, x_ave):
 
-    y = interp1d(x, f, kind='cubic')
+    y = interp1d(x, f, kind='cubic', axis=0)
 
     return y(x_ave)
 
