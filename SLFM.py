@@ -46,10 +46,10 @@ def table_SLFM(dir_name = 'flamelets',
     independent_variance = sequence_01(
         variance_mesh, variance_num, variance_ratio)
 
-    flamelet_table = np.empty((chi.size, 
-                               independent_variance.size, 
-                               independent_average.size, 
-                               variable_names.size))
+    flamelet_table = np.empty((variable_names.size,
+                               independent_average.size,
+                               independent_variance.size,
+                               chi.size))
 
     for l, chi_st in enumerate(chi):
         params = { 'chi' : chi_st }
@@ -58,7 +58,7 @@ def table_SLFM(dir_name = 'flamelets',
         filename = '{0}/{1}.{2}'.format(dir_name, file_prefix, file_suffix)
         flamelet = np.genfromtxt(filename, names=True, delimiter=',')    
 
-        flamelet_table[l,:,:,:] = single_solution_integration(
+        flamelet_table[:,:,:,l] = single_solution_integration(
             flamelet,
             independent_variable, 
             independent_average, 
@@ -97,16 +97,16 @@ def table_SLFM(dir_name = 'flamelets',
                 f['stoichiometricScalarDissipationRate'],
                 'stoichiometricScalarDissipationRate')
         
-        f['flameletTable'].dims[0].attach_scale(
+        f['flameletTable'].dims[3].attach_scale(
                 f['stoichiometricScalarDissipationRate'])
 
-        f['flameletTable'].dims[1].attach_scale(
+        f['flameletTable'].dims[2].attach_scale(
                 f['mixtureFractionNormalizedVariance'])
 
-        f['flameletTable'].dims[2].attach_scale(
+        f['flameletTable'].dims[1].attach_scale(
                 f['mixtureFractionAverage'])
 
-        f['flameletTable'].dims[3].attach_scale(
+        f['flameletTable'].dims[0].attach_scale(
                 f['variable'])
 
     return

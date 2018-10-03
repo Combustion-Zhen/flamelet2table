@@ -1,31 +1,49 @@
 import numpy as np
 from name_params import *
-from beta_integration import beta_integration
+from beta_integration import *
 
 def single_solution_integration(
         solution, x_name, x_ave, x_var, y_names):
 
-    # flamelet: arrray, flamelet solution in structured numpy array
+    epsilon = 1.e-9
 
-    integration = np.empty((x_var.size, x_ave.size, y_names.size))
+    x = solution[x_name]
 
-    for i, var in enumerate(x_var):
+    integration = np.empty((y_names.size, x_ave.size, x_var.size))
+
+    # calculate the beta integration coefficients
+    B = np.empty((x_ave.size, x_var.size))
+    CDF0 = np.empty((x_ave.size, x_var.size, x.size))
+    CDF1 = np.empty((x_ave.size, x_var.size, x.size))
+
+    for j, ave in enumerate(x_ave):
+        for k, var in enumerate(x_var):
+            if (ave > epsilon and
+                ave < 1.-epsilon and
+                var > epsilon and
+                var < 1.-epsilon):
+
+                B[j,k], CDF0[j,k,:], CDF1[j,k,:] = beta_integration_coef(
+                    x, ave, var)
+
+    for i, name in enumerate(y_names):
         for j, ave in enumerate(x_ave):
-            for k, name in enumerate(y_names):
+            for k, var in enumerate(x_var):
                 integration[i,j,k] = beta_integration(
-                    solution[name], solution[x_name], ave, var)
+                        solution[name], x, ave, var,
+                        B[j,k], CDF0[j,k,:], CDF1[j,k,:],epsilon)
 
     return integration
 
 def param_solution_integration(
         filenames, x_name, x_ave, x_var, y_names):
 
-    table = np.empty((filenames.size, x_var.size, x_ave.size, y_names.size))
+    table = np.empty((y_names.size, x_ave.size, x_var.size, filenames.size))
 
     for i, filename in enumerate( filenames ):
         solution = np.genfromtxt(filename, names=True, delimiter=',')
 
-        table[i,:,:,:] = single_solution_integration(
+        table[:,:,:,i] = single_solution_integration(
             solution, x_name, x_ave, x_var, y_names)
 
     return table

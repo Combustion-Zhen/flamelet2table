@@ -83,32 +83,32 @@ def single_param_table(
 
     # name of data axis
     axis = []
-    axis.append( '{}NormalizedVariance'.format(param_name) )
-    axis.append( '{}Average'.format(param_name) )
-    axis.append( '{}NormalizedVariance'.format(independent_variable) )
-    axis.append( '{}Average'.format(independent_variable) )
     axis.append( 'variable' )
+    axis.append( '{}Average'.format(independent_variable) )
+    axis.append( '{}NormalizedVariance'.format(independent_variable) )
+    axis.append( '{}Average'.format(param_name) )
+    axis.append( '{}NormalizedVariance'.format(param_name) )
 
     # save the flamelet table
     with h5py.File('flameletTable.h5', 'w') as f:
         
         f['flameletTable'] = flamelet_table
         
-        f[axis[1]] = param_average
-        f[axis[2]] = normalized_variance
-        f[axis[3]] = independent_average
-
-        if param_pdf != 'delta':
-            f[axis[0]] = normalized_variance
-        else:
-            del axis[0]
-        
         # strings
         dt = h5py.special_dtype(vlen=str)
-        ds = f.create_dataset(axis[-1],
+        ds = f.create_dataset(axis[0],
                               variable_names.shape,
                               dtype=dt)
         ds[...] = variable_names
+
+        f[axis[1]] = independent_average
+        f[axis[2]] = normalized_variance
+        f[axis[3]] = param_average
+
+        if param_pdf != 'delta':
+            f[axis[4]] = normalized_variance
+        else:
+            del axis[-1]
 
         for i, v in enumerate(axis):
             f['flameletTable'].dims.create_scale(f[v], v)
