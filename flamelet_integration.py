@@ -17,7 +17,7 @@ def single_solution_integration(
 
     return integration
 
-def single_param_integration(
+def param_solution_integration(
         filenames, x_name, x_ave, x_var, y_names):
 
     table = np.empty((filenames.size, x_var.size, x_ave.size, y_names.size))
@@ -27,6 +27,12 @@ def single_param_integration(
 
         table[i,:,:,:] = single_solution_integration(
             solution, x_name, x_ave, x_var, y_names)
+
+    return table
+
+def param_beta_integration(solution, p_ave, p_var):
+
+    table = np.empty((p_var.size, p_ave.size)+solution.shape[1:])
 
     return table
 
@@ -48,10 +54,10 @@ def dependent_variable_names(flamelet, independent_variable):
 
     return np.array( names )
 
-def independent_variable_average(flamelet, var, mesh, npts):
+def average_sequence(mesh, solution, npts):
 
     if mesh == 'solution' :
-        return flamelet[var]
+        return solution
     else :
         return np.linspace(0., 1., num = npts)
 

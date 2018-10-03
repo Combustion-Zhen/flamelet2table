@@ -3,6 +3,7 @@ import argparse
 import numpy as np
 import h5py
 from flamelet_integration import *
+from beta_integration import delta_integration
 from name_params import name2params
 
 def single_param_table(
@@ -53,62 +54,65 @@ def single_param_table(
     variable_names = dependent_variable_names(flamelet, independent_variable)
 
     # the independent variable average axis
-    independent_average = independent_variable_average(
-        flamelet,independent_variable,average_mesh,average_num)
+    independent_average = average_sequence(
+        average_mesh, flamelet[independent_variable], average_num)
 
     # the variance axis
     normalized_variance = sequence_01(
         variance_mesh, variance_num, variance_ratio)
 
-    # flamelet table with delta distribution of the parameter
-    flamelet_table = single_param_integration(
+    # the parameter average axis
+    param_average = average_sequence(param_mesh, param, average_num)
+
+    # flamelet table with the parameter from solutions
+    flamelet_table_solution = param_solution_integration(
         filenames, 
         independent_variable, independent_average, normalized_variance, 
         variable_names)
+
+    # integration with repect to the parameter
+    if param_mesh == 'beta':
+        flamelet_table = param_beta_integration(
+            flamelet_table_solution, param_average, normalized_variance)
+        # variance integration to be implemented
+    elif param_mesh != 'solution':
+        flamelet_table = delta_integration(
+            flamelet_table_solution, param, param_average)
+    else:
+        flamelet_table = flamelet_table_solution
+
+    # name of data axis
+    axis = []
+    axis.append( '{}NormalizedVariance'.format(param_name) )
+    axis.append( '{}Average'.format(param_name) )
+    axis.append( '{}NormalizedVariance'.format(independent_variable) )
+    axis.append( '{}Average'.format(independent_variable) )
+    axis.append( 'variable' )
 
     # save the flamelet table
     with h5py.File('flameletTable.h5', 'w') as f:
         
         f['flameletTable'] = flamelet_table
         
+        f[axis[1]] = param_average
+        f[axis[2]] = normalized_variance
+        f[axis[3]] = independent_average
+
+        if param_pdf != 'delta':
+            f[axis[0]] = normalized_variance
+        else:
+            del axis[0]
+        
         # strings
         dt = h5py.special_dtype(vlen=str)
-        ds = f.create_dataset('variable',
+        ds = f.create_dataset(axis[-1],
                               variable_names.shape,
                               dtype=dt)
         ds[...] = variable_names
-        
-        f['mixtureFractionAverage'] = independent_average
-        f['mixtureFractionNormalizedVariance'] = normalized_variance
-        f['stoichiometricLambda'] = param
-        
-        f['flameletTable'].dims.create_scale(
-                f['variable'],
-                'variable')
-        
-        f['flameletTable'].dims.create_scale(
-                f['mixtureFractionAverage'],
-                'mixtureFractionAverage')
-        
-        f['flameletTable'].dims.create_scale(
-                f['mixtureFractionNormalizedVariance'],
-                'mixtureFractionNormalizedVariance')
-        
-        f['flameletTable'].dims.create_scale(
-                f['stoichiometricLambda'],
-                'stoichiometricLambda')
-        
-        f['flameletTable'].dims[0].attach_scale(
-                f['stoichiometricLambda'])
 
-        f['flameletTable'].dims[1].attach_scale(
-                f['mixtureFractionNormalizedVariance'])
-
-        f['flameletTable'].dims[2].attach_scale(
-                f['mixtureFractionAverage'])
-
-        f['flameletTable'].dims[3].attach_scale(
-                f['variable'])
+        for i, v in enumerate(axis):
+            f['flameletTable'].dims.create_scale(f[v], v)
+            f['flameletTable'].dims[i].attach_scale(f[v])
 
     return
 

@@ -39,8 +39,8 @@ def table_SLFM(dir_name = 'flamelets',
     variable_names = dependent_variable_names(flamelet, independent_variable)
 
     # the average axis
-    independent_average = independent_variable_average(
-        flamelet,independent_variable,average_mesh,average_num)
+    independent_average = average_sequence(
+        average_mesh,flamelet[independent_variable],average_num)
 
     # the variance axis
     independent_variance = sequence_01(
