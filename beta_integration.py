@@ -45,15 +45,15 @@ def bimodal_integration(f, x_ave):
 
 def beta_integration(
         f, x, x_ave, x_nvar,
-        B, CDF0, CDF1, epsilon):
+        B, CDF0, CDF1, EPS):
 
-    if x_ave < epsilon:
+    if x_ave < EPS:
         return f[0]
-    elif x_ave > 1.-epsilon:
+    elif x_ave > 1.-EPS:
         return f[-1]
-    elif x_nvar < epsilon:
+    elif x_nvar < EPS:
         return delta_integration(f, x, x_ave)
-    elif x_nvar > 1.-epsilon:
+    elif x_nvar > 1.-EPS:
         return bimodal_integration(f, x_ave)
     else:
         return beta_integration_analytic(

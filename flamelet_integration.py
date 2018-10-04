@@ -5,7 +5,7 @@ from beta_integration import *
 def single_solution_integration(
         solution, x_name, x_ave, x_var, y_names):
 
-    epsilon = 1.e-9
+    EPS = 1.e-9
 
     x = solution[x_name]
 
@@ -18,10 +18,7 @@ def single_solution_integration(
 
     for j, ave in enumerate(x_ave):
         for k, var in enumerate(x_var):
-            if (ave > epsilon and
-                ave < 1.-epsilon and
-                var > epsilon and
-                var < 1.-epsilon):
+            if ave > EPS and ave < 1.-EPS and var > EPS and var < 1.-EPS :
 
                 B[j,k], CDF0[j,k,:], CDF1[j,k,:] = beta_integration_coef(
                     x, ave, var)
@@ -31,7 +28,7 @@ def single_solution_integration(
             for k, var in enumerate(x_var):
                 integration[i,j,k] = beta_integration(
                         solution[name], x, ave, var,
-                        B[j,k], CDF0[j,k,:], CDF1[j,k,:],epsilon)
+                        B[j,k], CDF0[j,k,:], CDF1[j,k,:],EPS)
 
     return integration
 
@@ -48,9 +45,9 @@ def param_solution_integration(
 
     return table
 
-def param_beta_integration(solution, p_ave, p_var):
+def param_beta_integration(solution, p, p_ave, p_var):
 
-    table = np.empty((p_var.size, p_ave.size)+solution.shape[1:])
+    table = np.empty(solution.shape[:-1]+(p_ave.size, p_var.size))
 
     return table
 
