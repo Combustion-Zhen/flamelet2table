@@ -5,30 +5,14 @@ from beta_integration import *
 def single_solution_integration(
         solution, x_name, x_ave, x_var, y_names):
 
-    EPS = 1.e-9
-
     x = solution[x_name]
 
-    integration = np.empty((y_names.size, x_ave.size, x_var.size))
-
-    # calculate the beta integration coefficients
-    B = np.empty((x_ave.size, x_var.size))
-    CDF0 = np.empty((x_ave.size, x_var.size, x.size))
-    CDF1 = np.empty((x_ave.size, x_var.size, x.size))
-
-    for j, ave in enumerate(x_ave):
-        for k, var in enumerate(x_var):
-            if ave > EPS and ave < 1.-EPS and var > EPS and var < 1.-EPS :
-
-                B[j,k], CDF0[j,k,:], CDF1[j,k,:] = beta_integration_coef(
-                    x, ave, var)
+    f = np.empty((y_names.size, x.size))
 
     for i, name in enumerate(y_names):
-        for j, ave in enumerate(x_ave):
-            for k, var in enumerate(x_var):
-                integration[i,j,k] = beta_integration(
-                        solution[name], x, ave, var,
-                        B[j,k], CDF0[j,k,:], CDF1[j,k,:],EPS)
+        f[i,:] = solution[name]
+
+    integration = param_beta_integration(f, x, x_ave, x_var)
 
     return integration
 
@@ -47,7 +31,13 @@ def param_solution_integration(
 
 def param_beta_integration(solution, p, p_ave, p_var):
 
-    table = np.empty(solution.shape[:-1]+(p_ave.size, p_var.size))
+    solution_flatten = np.reshape(solution, (-1,p.size), order='F')
+
+    table_flatten = beta_integration_table(solution_flatten, p, p_ave, p_var)
+
+    table = np.reshape(table_flatten,
+                       solution.shape[:-1]+(p_ave.size, p_var.size),
+                       order='F')
 
     return table
 
