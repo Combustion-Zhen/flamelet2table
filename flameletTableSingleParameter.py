@@ -18,7 +18,7 @@ def single_param_table(
         ref_param = 'chi'
     elif mode == 'FPV' :
         independent_variable = 'Z'
-        param_name = 'T'
+        param_name = 'ProgressVariable'
         ref_param = 'chi'
     else :
         print('mode not implemented')
@@ -52,6 +52,8 @@ def single_param_table(
 
     # the variables to be integrated
     variable_names = dependent_variable_names(flamelet, independent_variable)
+    if param_pdf == 'beta':
+        variable_names.append('{}Variance'.format(param_name))
 
     # the independent variable average axis
     independent_average = average_sequence(
@@ -71,10 +73,12 @@ def single_param_table(
         variable_names)
 
     # integration with repect to the parameter
-    if param_mesh == 'beta':
-        flamelet_table = param_beta_integration(
-            flamelet_table_solution, param_average, normalized_variance)
-        # variance integration to be implemented
+    if param_pdf == 'beta':
+        flamelet_table = param_ave_integration(
+            flamelet_table_solution, param, param_average, normalized_variance)
+        # variance
+        idx = variable_names.index( param_name )
+        flamelet_table[-1,:,:,:,:] -= np.square(flamelet_table[idx,:,:,:,:])
     elif param_mesh != 'solution':
         flamelet_table = delta_integration(
             flamelet_table_solution, param, param_average)
@@ -86,8 +90,8 @@ def single_param_table(
     axis.append( 'variable' )
     axis.append( '{}Average'.format(independent_variable) )
     axis.append( '{}NormalizedVariance'.format(independent_variable) )
-    axis.append( '{}Average'.format(param_name) )
-    axis.append( '{}NormalizedVariance'.format(param_name) )
+    axis.append( 'Parameter{}Average'.format(param_name) )
+    axis.append( 'Parameter{}NormalizedVariance'.format(param_name) )
 
     # save the flamelet table
     with h5py.File('flameletTable.h5', 'w') as f:

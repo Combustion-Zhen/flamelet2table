@@ -84,16 +84,9 @@ def beta_integration_coef(x, x_ave, x_nvar):
     return B, cdf0, cdf1
 
 
-# beta integration of a average and variance table
-def beta_integration_table(f, x, x_ave, x_var):
+# calculate the coefficients for analytic beta integration
+def beta_integration_coef_table(x, x_ave, x_var, EPS):
 
-    EPS = 1.e-9
-
-    variable_number = f.shape[0]
-
-    table = np.empty((variable_number, x_ave.size, x_var.size))
-
-    # calculate the beta integration coefficients
     B = np.empty((x_ave.size, x_var.size))
     CDF0 = np.empty((x_ave.size, x_var.size, x.size))
     CDF1 = np.empty((x_ave.size, x_var.size, x.size))
@@ -101,9 +94,20 @@ def beta_integration_table(f, x, x_ave, x_var):
     for j, ave in enumerate(x_ave):
         for k, var in enumerate(x_var):
             if ave > EPS and ave < 1.-EPS and var > EPS and var < 1.-EPS :
-
                 B[j,k], CDF0[j,k,:], CDF1[j,k,:] = beta_integration_coef(
                     x, ave, var)
+
+    return B, CDF0, CDF1
+
+
+# beta integration of a average and variance table
+def beta_integration_table(f, x, x_ave, x_var, EPS=1.e-9):
+
+    variable_number = f.shape[0]
+
+    table = np.empty((variable_number, x_ave.size, x_var.size))
+
+    B, CDF0, CDF1 = beta_integration_coef_table(x, x_ave, x_var, EPS)
 
     for i, v in enumerate(f):
         for j, ave in enumerate(x_ave):

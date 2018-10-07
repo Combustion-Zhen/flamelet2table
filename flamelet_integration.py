@@ -10,9 +10,12 @@ def single_solution_integration(
     f = np.empty((y_names.size, x.size))
 
     for i, name in enumerate(y_names):
-        f[i,:] = solution[name]
+        if name.endswith('Variance'):
+            f[i,:] = np.square( solution[name[:-8]] )
+        else:
+            f[i,:] = solution[name]
 
-    integration = param_beta_integration(f, x, x_ave, x_var)
+    integration = param_ave_integration(f, x, x_ave, x_var)
 
     return integration
 
@@ -29,7 +32,7 @@ def param_solution_integration(
 
     return table
 
-def param_beta_integration(solution, p, p_ave, p_var):
+def param_ave_integration(solution, p, p_ave, p_var):
 
     solution_flatten = np.reshape(solution, (-1,p.size), order='F')
 

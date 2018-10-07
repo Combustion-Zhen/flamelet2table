@@ -3,6 +3,7 @@ A python script to transfer FlameMaster output to csv tables
 """
 
 import numpy as np
+from scipy.interpolate import interp1d
 import os
 import sys
 import glob
@@ -37,7 +38,10 @@ def FM2csv(mode = 'SLFM',
 
     extra_var = ['Z', 'chi', 'lambda', 'cp', 'mu', 'D',
                  'ProdRateCO2', 'ProdRateH2O', 'ProdRateCO', 'ProdRateH2',
-                 'TotalEnthalpy', 'HeatRelease']
+                 'TotalEnthalpy', 'HeatRelease',
+                 'ProgressVariable', 'ProdRateProgressVariable']
+
+    prog_var_spe = ['CO2', 'CO', 'H2O', 'H2']
 
     for name in extra_var:
         name_dict[name] = name
@@ -54,17 +58,13 @@ def FM2csv(mode = 'SLFM',
         params['chi'] = float(
             flamelet[flamelet.find('chi')+3:flamelet.find('tf')])
 
-        if mode == 'FPV' :
-            params['T'] = float(
-                flamelet[flamelet.find('Tst')+3:])
-
-        file_prefix = params2name( params )
-
         with open(flamelet,'r') as f:
 
             # read the header part
             for line in f:
-                if line.startswith('gridPoints'):
+                if line.startswith('Z_st'):
+                    Zst = float(line.split()[2])
+                elif line.startswith('gridPoints'):
                     npts = int(line.split()[-1])
                     nrow = np.ceil(npts/NCOL)
                 elif line.startswith('body'):
@@ -73,7 +73,7 @@ def FM2csv(mode = 'SLFM',
             name_FlameMaster = list(name_dict.keys())
             name_csv = list(name_dict.values())
 
-            data = np.empty((npts, len(name_FlameMaster)),order='F')
+            data = np.zeros((npts, len(name_FlameMaster)),order='F')
 
             for line in f:
 
@@ -95,19 +95,41 @@ def FM2csv(mode = 'SLFM',
                     i = name_csv.index( name_dict[var_name] )
                     data[:,i] = np.array( var )
 
-            # calculate Diffusivity with Le = 1
-            idx_D = name_csv.index( 'D' )
-            idx_lambda = name_csv.index( 'lambda' )
-            idx_rho = name_csv.index( 'rho' )
-            idx_cp = name_csv.index( 'cp' )
-            data[:,idx_D] = data[:,idx_lambda]/(data[:,idx_rho]*data[:,idx_cp])
+        # calculate Diffusivity with Le = 1
+        idx_D = name_csv.index( 'D' )
+        idx_lambda = name_csv.index( 'lambda' )
+        idx_rho = name_csv.index( 'rho' )
+        idx_cp = name_csv.index( 'cp' )
+        data[:,idx_D] = data[:,idx_lambda]/(data[:,idx_rho]*data[:,idx_cp])
 
-            np.savetxt('{}/{}.{}'.format(csv_dir,file_prefix,file_suffix),
-                       data, 
-                       fmt = '%12.6e', 
-                       delimiter = ',', 
-                       header = ','.join(name_csv),
-                       comments='')
+        # calculate the progress variable based on the list prog_var_spe
+        idx_C = name_csv.index( 'ProgressVariable' )
+        idx_C_rate = name_csv.index( 'ProdRateProgressVariable' )
+        for spe in prog_var_spe:
+            idx_spe = name_csv.index( spe )
+            idx_spe_rate = name_csv.index( 'ProdRate{}'.format(spe) )
+
+            data[:,idx_C] += data[:,idx_spe]
+            data[:,idx_C_rate] += data[:,idx_spe_rate]
+
+
+        if mode == 'FPV' :
+            params['T'] = float(
+                flamelet[flamelet.find('Tst')+3:])
+
+            idx_Z = name_csv.index( 'Z' )
+            y = interp1d( data[:,idx_Z], data[:,idx_C] )
+            params['ProgressVariable'] = y( Zst )
+
+        # file name
+        file_prefix = params2name( params )
+
+        np.savetxt('{}/{}.{}'.format(csv_dir,file_prefix,file_suffix),
+                   data,
+                   fmt = '%12.6e',
+                   delimiter = ',',
+                   header = ','.join(name_csv),
+                   comments='')
 
     return
 
