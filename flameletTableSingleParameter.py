@@ -51,9 +51,8 @@ def single_param_table(
     flamelet = reference_solution(filenames, ref_param, p_str, p_end)
 
     # the variables to be integrated
-    variable_names = dependent_variable_names(flamelet, independent_variable)
-    if param_pdf == 'beta':
-        variable_names.append('{}Variance'.format(param_name))
+    variable_names = dependent_variable_names(
+        flamelet, independent_variable, param_name)
 
     # the independent variable average axis
     independent_average = average_sequence(
@@ -76,14 +75,15 @@ def single_param_table(
     if param_pdf == 'beta':
         flamelet_table = param_ave_integration(
             flamelet_table_solution, param, param_average, normalized_variance)
-        # variance
-        idx = variable_names.index( param_name )
-        flamelet_table[-1,:,:,:,:] -= np.square(flamelet_table[idx,:,:,:,:])
     elif param_mesh != 'solution':
         flamelet_table = delta_integration(
             flamelet_table_solution, param, param_average)
     else:
         flamelet_table = flamelet_table_solution
+
+    # variance
+    idx = list(variable_names).index( param_name )
+    flamelet_table[-1,:,:,:,:] -= np.square(flamelet_table[idx,:,:,:,:])
 
     # name of data axis
     axis = []
@@ -115,6 +115,7 @@ def single_param_table(
             del axis[-1]
 
         for i, v in enumerate(axis):
+            f['flameletTable'].dims[i].label = v
             f['flameletTable'].dims.create_scale(f[v], v)
             f['flameletTable'].dims[i].attach_scale(f[v])
 
@@ -146,7 +147,7 @@ if __name__ == '__main__':
         '--parameter-pdf',
         default = 'delta',
         type = str,
-        help = 'pdf of the flamelet parameter [delta]')
+        help = 'pdf of the flamelet parameter [delta]/beta')
 
     parser.add_argument(
         '-a', '--average-mesh',

@@ -55,10 +55,11 @@ def geometric_progression_01( n, ratio ):
 
     return r
 
-def dependent_variable_names(flamelet, independent_variable):
+def dependent_variable_names(flamelet, independent_variable, param):
 
     names = list( flamelet.dtype.names )
     names.remove( independent_variable )
+    names.append('{}Variance'.format(param))
 
     return np.array( names )
 

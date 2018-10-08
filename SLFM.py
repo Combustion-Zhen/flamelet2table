@@ -36,7 +36,8 @@ def table_SLFM(dir_name = 'flamelets',
     flamelet = np.genfromtxt(filename, names=True, delimiter=',')
 
     # the variables to be integrated
-    variable_names = dependent_variable_names(flamelet, independent_variable)
+    variable_names = dependent_variable_names(
+        flamelet, independent_variable, 'chi')
 
     # the average axis
     independent_average = average_sequence(
