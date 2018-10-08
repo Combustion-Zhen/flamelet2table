@@ -40,10 +40,10 @@ def single_param_table(
         filenames.append( filename )
 
     param = np.array(param)
-    idx = np.argsort(param)[::-1]
+    idx = np.argsort(param)
 
     param = param[idx]
-    param = (param-param[-1])/(param[0]-param[-1])
+    param = (param-param[0])/(param[-1]-param[0])
 
     filenames = np.array( filenames )[idx]
 

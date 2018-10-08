@@ -9,11 +9,10 @@ def single_solution_integration(
 
     f = np.empty((y_names.size, x.size))
 
-    for i, name in enumerate(y_names):
-        if name.endswith('Variance'):
-            f[i,:] = np.square( solution[name[:-8]] )
-        else:
-            f[i,:] = solution[name]
+    for i, name in enumerate(y_names[:-1]):
+        f[i,:] = solution[name]
+
+    f[-1,:] = np.square( solution[y_names[-1][:-8]] )
 
     integration = param_ave_integration(f, x, x_ave, x_var)
 
@@ -84,7 +83,7 @@ def reference_solution(filenames, ref_param, p_str, p_end):
     for i, filename in enumerate(filenames):
         ref_var[i] = name2params(filename[p_str:p_end])[ref_param]
 
-    filename = filenames[0]
+    filename = filenames[-1]
     for i in range( filenames.size-2 ):
         if ref_var[i] < ref_var[i+1] and ref_var[i+1] > ref_var[i+2]:
             filename = filenames[i+1]
