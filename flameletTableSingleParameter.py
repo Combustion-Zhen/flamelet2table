@@ -83,7 +83,9 @@ def single_param_table(
 
     # variance
     idx = list(variable_names).index( param_name )
-    flamelet_table[-1,:,:,:,:] -= np.square(flamelet_table[idx,:,:,:,:])
+    table_flatten = np.reshape( flamelet_table, (variable_names.size,-1) )
+    table_flatten[-1,:] -= np.square(table_flatten[idx,:])
+    flamelet_table = np.reshape( table_flatten, flamelet_table.shape )
 
     # name of data axis
     axis = []

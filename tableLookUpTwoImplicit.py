@@ -2,7 +2,7 @@ import numpy as np
 import h5py
 from scipy import interpolate
 
-def flameletTableLookUpTwoImplicit(
+def tableLookUpTwoImplicit(
         x_ave, x_var, p0, p1,
         filename = 'flameletTable.h5',
         p0_name = 'ProgressVariable', 
