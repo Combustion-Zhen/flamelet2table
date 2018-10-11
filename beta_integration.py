@@ -103,17 +103,23 @@ def beta_integration_coef_table(x, x_ave, x_var, EPS):
 # beta integration of a average and variance table
 def beta_integration_table(f, x, x_ave, x_var, EPS=1.e-9):
 
-    variable_number = f.shape[0]
+    f_flatten = np.reshape(f, (-1, x.size), order='F')
 
-    table = np.empty((variable_number, x_ave.size, x_var.size))
+    variable_number = f_flatten.shape[0]
+
+    table_flatten = np.empty((variable_number, x_ave.size, x_var.size))
 
     B, CDF0, CDF1 = beta_integration_coef_table(x, x_ave, x_var, EPS)
 
-    for i, v in enumerate(f):
+    for i, v in enumerate(f_flatten):
         for j, ave in enumerate(x_ave):
             for k, var in enumerate(x_var):
-                table[i,j,k] = beta_integration(
+                table_flatten[i,j,k] = beta_integration(
                         v, x, ave, var,
                         B[j,k], CDF0[j,k,:], CDF1[j,k,:], EPS)
+
+    table = np.reshape(table_flatten, 
+                       f.shape[:-1]+(x_ave.size, x_var.size), 
+                       order='F')
 
     return table

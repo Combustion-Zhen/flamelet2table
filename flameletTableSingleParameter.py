@@ -7,7 +7,7 @@ from beta_integration import delta_integration
 from name_params import name2params
 
 def single_param_table(
-    mode = 'SLFM', dir_name = 'flamelets',
+    mode = 'SLFM', dir_name = 'flamelets', output='flameletTable.h5',
     param_mesh = 'solution', param_pdf = 'delta',
     average_mesh = 'solution', average_num = 100,
     variance_mesh = 'geometric', variance_num = 15, variance_ratio = 1.1):
@@ -20,6 +20,10 @@ def single_param_table(
         independent_variable = 'Z'
         param_name = 'ProgressVariable'
         ref_param = 'chi'
+    elif mode == 'FPI' :
+        independent_variable = 'ProgressVariable'
+        param_name = 'Z'
+        ref_param = 'ProgressVariable'
     else :
         print('mode not implemented')
         return
@@ -51,8 +55,13 @@ def single_param_table(
     flamelet = reference_solution(filenames, ref_param, p_str, p_end)
 
     # the variables to be integrated
-    variable_names = dependent_variable_names(
-        flamelet, independent_variable, param_name)
+    names = dependent_variable_names(
+        flamelet, independent_variable)
+
+    if param_pdf != 'delta' and mode != 'FPI' :
+        names.append('{}Variance'.format(param_name))
+
+    variable_names = np.array( names )
 
     # the independent variable average axis
     independent_average = average_sequence(
@@ -71,9 +80,9 @@ def single_param_table(
         independent_variable, independent_average, normalized_variance, 
         variable_names)
 
-    # integration with repect to the parameter
+    # integration with respect to the parameter
     if param_pdf == 'beta':
-        flamelet_table = param_ave_integration(
+        flamelet_table = beta_integration_table(
             flamelet_table_solution, param, param_average, normalized_variance)
     elif param_mesh != 'solution':
         flamelet_table = delta_integration(
@@ -81,11 +90,19 @@ def single_param_table(
     else:
         flamelet_table = flamelet_table_solution
 
-    # variance
-    idx = list(variable_names).index( param_name )
-    table_flatten = np.reshape( flamelet_table, (variable_names.size,-1) )
-    table_flatten[-1,:] -= np.square(table_flatten[idx,:])
-    flamelet_table = np.reshape( table_flatten, flamelet_table.shape )
+    if mode == 'FPI' :
+        # integration of the max progress variable for normalization
+        normalization_param = np.zeros( (2, param.size) )
+        for i in range( param.size ):
+            params = name2params( filenames[i][p_str:p_end] )
+            normalization_param[0,i] = params[ref_param]
+        normalization_param[1,:] = np.square( normalization[0,:] )
+        normalization_table = beta_integration_table(
+            normalization_param, param, param_average, normalized_variance)
+    elif param_pdf != 'delta' :
+        # variance for implicit parameter
+        idx = list(variable_names).index( param_name )
+        flamelet_table[-1,:,:,:,:] -= np.reshape( flamelet_table[idx,:,:,:,:] )
 
     # name of data axis
     axis = []
@@ -96,7 +113,7 @@ def single_param_table(
     axis.append( 'Parameter{}NormalizedVariance'.format(param_name) )
 
     # save the flamelet table
-    with h5py.File('flameletTable.h5', 'w') as f:
+    with h5py.File(output, 'w') as f:
         
         f['flameletTable'] = flamelet_table
         
@@ -121,6 +138,9 @@ def single_param_table(
             f['flameletTable'].dims.create_scale(f[v], v)
             f['flameletTable'].dims[i].attach_scale(f[v])
 
+        if mode == 'FPI' :
+            f['maxProgressVariable'] = normalization_table
+
     return
 
 if __name__ == '__main__':
@@ -138,6 +158,12 @@ if __name__ == '__main__':
         default = 'flamelets',
         type = str,
         help = 'folder of the flamelet solutions [flamelets]')
+
+    parser.add_argument(
+        '-o', '--output',
+        default = 'flameletTable.h5',
+        type = str,
+        help = 'output file name [flameletTable.h5]')
 
     parser.add_argument(
         '-p', '--parameter-mesh',
@@ -186,7 +212,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     single_param_table(
-        mode = args.mode, dir_name = args.folder,
+        mode = args.mode, dir_name = args.folder, output = args.output,
         param_mesh = args.parameter_mesh, param_pdf = args.parameter_pdf,
         average_mesh = args.average_mesh, average_num = args.number_average,
         variance_mesh = args.variance_mesh, variance_num = args.number_variance,

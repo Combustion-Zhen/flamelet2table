@@ -9,12 +9,13 @@ def single_solution_integration(
 
     f = np.empty((y_names.size, x.size))
 
-    for i, name in enumerate(y_names[:-1]):
-        f[i,:] = solution[name]
+    for i, name in enumerate(y_names):
+        if name.endswith('Variance'):
+            f[i,:] = np.square( solution[name[:-8]] )
+        else:
+            f[i,:] = solution[name]
 
-    f[-1,:] = np.square( solution[y_names[-1][:-8]] )
-
-    integration = param_ave_integration(f, x, x_ave, x_var)
+    integration = beta_integration_table(f, x, x_ave, x_var)
 
     return integration
 
@@ -31,17 +32,22 @@ def param_solution_integration(
 
     return table
 
-def param_ave_integration(solution, p, p_ave, p_var):
-
-    solution_flatten = np.reshape(solution, (-1,p.size), order='F')
-
-    table_flatten = beta_integration_table(solution_flatten, p, p_ave, p_var)
-
-    table = np.reshape(table_flatten,
-                       solution.shape[:-1]+(p_ave.size, p_var.size),
-                       order='F')
-
-    return table
+#def param_ave_integration(solution, p, p_ave, p_var):
+#
+#    solution_flatten = np.reshape(solution, (-1,p.size), order='F')
+#
+#    table_flatten = beta_integration_table(solution_flatten, p, p_ave, p_var)
+#
+#    table = np.reshape(table_flatten,
+#                       solution.shape[:-1]+(p_ave.size, p_var.size),
+#                       order='F')
+#
+#    return table
+#
+#def table_integration( f, x, x_ave, x_var, pdf ):
+#    if pdf == 'beta' :
+#        table = 
+#    return
 
 def geometric_progression_01( n, ratio ):
 
@@ -54,13 +60,12 @@ def geometric_progression_01( n, ratio ):
 
     return r
 
-def dependent_variable_names(flamelet, independent_variable, param):
+def dependent_variable_names(flamelet, independent_variable):
 
     names = list( flamelet.dtype.names )
     names.remove( independent_variable )
-    names.append('{}Variance'.format(param))
 
-    return np.array( names )
+    return names
 
 def average_sequence(mesh, solution, npts):
 
