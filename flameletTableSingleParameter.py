@@ -80,15 +80,11 @@ def single_param_table(
         independent_variable, independent_average, normalized_variance, 
         variable_names)
 
-    # integration with respect to the parameter
-    if param_pdf == 'beta':
-        flamelet_table = beta_integration_table(
-            flamelet_table_solution, param, param_average, normalized_variance)
-    elif param_mesh != 'solution':
-        flamelet_table = delta_integration(
-            flamelet_table_solution, param, param_average)
-    else:
-        flamelet_table = flamelet_table_solution
+    flamelet_table = table_integration(flamelet_table_solution,
+                                       param,
+                                       param_average,
+                                       normalized_variance,
+                                       param_pdf)
 
     if mode == 'FPI' :
         # integration of the max progress variable for normalization
@@ -97,8 +93,12 @@ def single_param_table(
             params = name2params( filenames[i][p_str:p_end] )
             normalization_param[0,i] = params[ref_param]
         normalization_param[1,:] = np.square( normalization[0,:] )
-        normalization_table = beta_integration_table(
-            normalization_param, param, param_average, normalized_variance)
+
+        normalization_table = table_integration(normalization_param,
+                                                param,
+                                                param_average,
+                                                normalized_variance,
+                                                param_pdf)
     elif param_pdf != 'delta' :
         # variance for implicit parameter
         idx = list(variable_names).index( param_name )
@@ -140,6 +140,10 @@ def single_param_table(
 
         if mode == 'FPI' :
             f['maxProgressVariable'] = normalization_table
+
+            f['maxProgressVariable'].dims[0].label = 'MeanAndSquareMean'
+            for i, v in enumerate(axis[3:]):
+                f['maxProgressVariable'].dims[i+1].label = v
 
     return
 

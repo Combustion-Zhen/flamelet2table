@@ -32,22 +32,15 @@ def param_solution_integration(
 
     return table
 
-#def param_ave_integration(solution, p, p_ave, p_var):
-#
-#    solution_flatten = np.reshape(solution, (-1,p.size), order='F')
-#
-#    table_flatten = beta_integration_table(solution_flatten, p, p_ave, p_var)
-#
-#    table = np.reshape(table_flatten,
-#                       solution.shape[:-1]+(p_ave.size, p_var.size),
-#                       order='F')
-#
-#    return table
-#
-#def table_integration( f, x, x_ave, x_var, pdf ):
-#    if pdf == 'beta' :
-#        table = 
-#    return
+
+def table_integration( f, x, x_ave, x_var, pdf ):
+
+    if pdf == 'beta' :
+        table = beta_integration_table(f, x, x_ave, x_var)
+    else:
+        table = delta_integration(f, x, x_ave)
+
+    return table
 
 def geometric_progression_01( n, ratio ):
 
