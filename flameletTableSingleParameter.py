@@ -64,15 +64,16 @@ def single_param_table(
     variable_names = np.array( names )
 
     # the independent variable average axis
-    independent_average = average_sequence(
-        average_mesh, flamelet[independent_variable], average_num)
+    independent_average = sequence_01(
+        average_mesh, average_num, flamelet[independent_variable], 1.)
 
     # the variance axis
     normalized_variance = sequence_01(
-        variance_mesh, variance_num, variance_ratio)
+        variance_mesh, variance_num, np.linspace(0.,1.), variance_ratio)
 
     # the parameter average axis
-    param_average = average_sequence(param_mesh, param, average_num)
+    param_average = sequence_01(
+        param_mesh, average_num, param, 1.)
 
     # flamelet table with the parameter from solutions
     flamelet_table_solution = param_solution_integration(
@@ -102,7 +103,7 @@ def single_param_table(
     elif param_pdf != 'delta' :
         # variance for implicit parameter
         idx = list(variable_names).index( param_name )
-        flamelet_table[-1,:,:,:,:] -= np.reshape( flamelet_table[idx,:,:,:,:] )
+        flamelet_table[-1,:,:,:,:] -= np.square( flamelet_table[idx,:,:,:,:] )
 
     # name of data axis
     axis = []
@@ -153,9 +154,9 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-m', '--mode',
-        default = 'SLFM',
+        default = 'FPV',
         type = str,
-        help = 'use of the flamelet solutions: [SLFM]/FPV')
+        help = 'use of the flamelet solutions: SLFM/[FPV]/FPI')
 
     parser.add_argument(
         '-f', '--folder',
@@ -171,9 +172,9 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-p', '--parameter-mesh',
-        default = 'solution',
+        default = 'uniform',
         type = str,
-        help = 'mesh of the flamelet parameter [solution]/uniform')
+        help = 'mesh of the flamelet parameter solution/[uniform]')
 
     parser.add_argument(
         '--parameter-pdf',
@@ -183,9 +184,9 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-a', '--average-mesh',
-        default = 'solution',
+        default = 'uniform',
         type = str,
-        help = 'mesh of average [solution]/uniform')
+        help = 'mesh of average solution/[uniform]')
 
     parser.add_argument(
         '--number-average',

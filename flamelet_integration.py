@@ -60,16 +60,11 @@ def dependent_variable_names(flamelet, independent_variable):
 
     return names
 
-def average_sequence(mesh, solution, npts):
+def sequence_01(mesh, npts, solution, ratio):
 
     if mesh == 'solution' :
         return solution
-    else :
-        return np.linspace(0., 1., num = npts)
-
-def sequence_01(mesh, npts, ratio):
-
-    if mesh == 'geometric' :
+    elif mesh == 'geometric' :
         return geometric_progression_01(npts, ratio)
     else :
         return np.linspace(0., 1., num = npts)
