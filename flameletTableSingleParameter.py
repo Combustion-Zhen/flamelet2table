@@ -63,6 +63,11 @@ def single_param_table(
 
     variable_names = np.array( names )
 
+    names = dependent_variable_names_print(
+        filenames[0], independent_variable)
+
+    names_print = np.array( names )
+
     # the independent variable average axis
     independent_average = sequence_01(
         average_mesh, average_num, flamelet[independent_variable], 1.)
@@ -107,7 +112,7 @@ def single_param_table(
 
     # name of data axis
     axis = []
-    axis.append( 'variable' )
+    axis.append( 'variables' )
     axis.append( '{}Average'.format(independent_variable) )
     axis.append( '{}NormalizedVariance'.format(independent_variable) )
     axis.append( 'Parameter{}Average'.format(param_name) )
@@ -121,9 +126,9 @@ def single_param_table(
         # strings
         dt = h5py.special_dtype(vlen=str)
         ds = f.create_dataset(axis[0],
-                              variable_names.shape,
+                              names_print.shape,
                               dtype=dt)
-        ds[...] = variable_names
+        ds[...] = names_print
 
         f[axis[1]] = independent_average
         f[axis[2]] = normalized_variance

@@ -60,6 +60,14 @@ def dependent_variable_names(flamelet, independent_variable):
 
     return names
 
+def dependent_variable_names_print(filename, independent_variable):
+    with open(filename, 'r') as f:
+        names = f.readline().rstrip().split(',')
+
+    names.remove( independent_variable )
+
+    return names
+
 def sequence_01(mesh, npts, solution, ratio):
 
     if mesh == 'solution' :
