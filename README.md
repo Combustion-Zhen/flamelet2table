@@ -1,7 +1,7 @@
 # flamelet2table
 python scripts to generate table from flamelet solutions
 
-FM2csv.py:  convert FlameMaster solutions to csv files
+FM2csv.py:  convert FlameMaster solutions to csv files. The file "speciestranslated" is required in the folder of FlameMaster solutions, which is generated when converting CK format to FM format. 
 
 flameletTableSingleParameter.py:  integrate the flamelet solutions to obtain a table, output to a hdf5 file
 
