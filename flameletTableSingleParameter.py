@@ -116,7 +116,7 @@ def single_param_table(
     axis.append( '{}Average'.format(independent_variable) )
     axis.append( '{}NormalizedVariance'.format(independent_variable) )
     axis.append( 'Parameter{}Average'.format(param_name) )
-    axis.append( 'Parameter{}NormalizedVariance'.format(param_name) )
+    axis.append( 'Parameter{}Variance'.format(param_name) )
 
     # save the flamelet table
     with h5py.File(output, 'w') as f:
