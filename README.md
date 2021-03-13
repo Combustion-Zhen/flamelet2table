@@ -17,7 +17,7 @@ python flameletTableSingleParameter.py -h
 
 reference:
 ```
-@inproceedings{Lu2017,
+@inproceedings{Lu2018,
        author = {{Lu}, Zhen and {Elbaz}, Ayman M. and {Hernandez Perez}, Francisco E. and {Roberts}, William L. and {Im}, Hong G.},
         title = "{LES/flamelet study of vortex-flame interaction in a turbulent nonpremixed swirl burner}",
     booktitle = {14th International Conference on Combustion and Energy Utilization},
