@@ -14,3 +14,14 @@ python FM2csv -h
 ```
 python flameletTableSingleParameter.py -h
 ```
+
+reference:
+@INPROCEEDINGS{Lu2017,
+       author = {{Lu}, Zhen and {Elbaz}, Ayman M. and {Hernandez Perez}, Francisco E. and {Roberts}, William L. and {Im}, Hong G.},
+        title = "{Large Eddy Simulations of the Vortex-Flame Interaction in a Turbulent Swirl Burner}",
+    booktitle = {APS Division of Fluid Dynamics Meeting Abstracts},
+         year = 2017,
+       series = {APS Meeting Abstracts},
+        month = nov,
+          eid = {Q2.005}
+}
